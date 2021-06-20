@@ -1,4 +1,4 @@
-Feature: Browser restaurant menus
+Feature: Browse restaurant menus
 
   Scenario:
     Given a restaurant "miim"
