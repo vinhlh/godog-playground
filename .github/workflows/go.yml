@@ -1,10 +1,11 @@
-name: Go
+name: Run Godog tests
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
 
@@ -17,9 +18,18 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: 1.15
-        
-    - name: Install httpie
-      run: sudo apt-get install httpie
+
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '12'
+
+    - name: Install json-to-messages
+      run: npm install -g @cucumber/json-to-messages
+
+    - name: Install godog
+      run: go get github.com/cucumber/godog/cmd/godog@v0.11.0
 
     - name: Run
+      env:
+        CUCUMBER_PUBLISH_TOKEN: '${{ secrets.CUCUMBER_PUBLISH_TOKEN }}'
       run: ./run.sh
