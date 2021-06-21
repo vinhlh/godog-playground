@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/cucumber/godog"
 )
@@ -12,8 +13,13 @@ import (
 var restaurantCode string
 var actualResponse *Response
 
+type Category struct {
+	Name string `json:"name"`
+}
+
 type Menu struct {
 	Name string `json:"name"`
+	Categories []Category `json:"menu_categories"`
 }
 
 type ResponseData struct {
@@ -63,6 +69,27 @@ func thereShouldBeMenu(expected string) error {
 	return nil
 }
 
+func thereShouldBeCategory(expected string) error {
+	if len(actualResponse.Data.Menus) == 0 {
+		return fmt.Errorf("no menu found")
+	}
+
+	categories := actualResponse.Data.Menus[0].Categories
+	actualCategoryByValue := map[string]bool{}
+	for _, c := range categories {
+		actualCategoryByValue[c.Name] = true
+	}
+
+	expectedCategories := strings.Split(expected, ", ")
+	for _, c := range expectedCategories {
+		if ok, _ := actualCategoryByValue[c]; !ok {
+			return fmt.Errorf("expected %s but not found", c)
+		}
+	}
+
+	return nil
+}
+
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.BeforeScenario(func(*godog.Scenario) {
 		restaurantCode = ""
@@ -72,4 +99,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a restaurant "([^"]*)"$`, aRestaurant)
 	ctx.Step(`^I visit retaurant detail page$`, iVisitRetaurantDetailPage)
 	ctx.Step(`^there should be "([^"]*)" menu$`, thereShouldBeMenu)
+	ctx.Step(`^there should be "([^"]*)" category$`, thereShouldBeCategory)
 }
